@@ -29,7 +29,7 @@ var (
 	stdlog,
 	errlog *log.Logger
 	AMIhost, AMIuser, AMIpass, AMIport string
-	CHREX1, CHREX2, CHREX3, CHREX4 string
+	CHREX1, CHREX2, CHREX3 string
 )
 
 type Config struct  {
@@ -53,7 +53,6 @@ type ZabbixCheck struct {
 	ChanRex1 string
 	ChanRex2 string
 	ChanRex3 string
-	ChanRex4 string
 }
 
 type Message map[string]string
@@ -135,7 +134,7 @@ func amiActionResponse(mm map[string]string, action string, arg string) {
 					qcall = m["Calls"]
 				}
 			}
-
+			
 		}
 	}
 	if action == _ACSC && arg == "out" {
@@ -165,6 +164,7 @@ func init() {
 	LOGDIR = conf.LogDir.Path
 	CHREX1 = conf.ZabbixCheck.ChanRex1
 	CHREX2 = conf.ZabbixCheck.ChanRex2
+	CHREX3 = conf.ZabbixCheck.ChanRex3
 	stdlog = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	errlog = log.New(os.Stderr, "", log.Ldate|log.Ltime)
 }

@@ -7,7 +7,8 @@
     },
     "zabbixCheck" : {
         "ChanRex1" : "Chan1",
-        "ChanRex2" : "Chan2"
+        "ChanRex2" : "Chan2",
+        "ChanRex3" : "Chan3"
     },
     "logdir" : {
         "path" : "/path/to/dir/"
