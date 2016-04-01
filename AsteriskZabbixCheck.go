@@ -29,7 +29,7 @@ var (
 	stdlog,
 	errlog *log.Logger
 	AMIhost, AMIuser, AMIpass, AMIport string
-	CHREX1, CHREX2 string
+	CHREX1, CHREX2, CHREX3, CHREX4 string
 )
 
 type Config struct  {
@@ -52,11 +52,13 @@ type LogDir struct {
 type ZabbixCheck struct {
 	ChanRex1 string
 	ChanRex2 string
+	ChanRex3 string
+	ChanRex4 string
 }
 
 type Message map[string]string
 
-func amiActionResponse(mm map[string]string, action string) {
+func amiActionResponse(mm map[string]string, action string, arg string) {
 	conn, _ := net.Dial("tcp", AMIhost+":"+AMIport)
 	fmt.Fprintf(conn, "Action: Login"+_LT)
 	fmt.Fprintf(conn, "Username: "+AMIuser+_LT)
@@ -74,7 +76,8 @@ func amiActionResponse(mm map[string]string, action string) {
 	r := bufio.NewReader(conn)
 	pbuf := bytes.NewBufferString("")
 	buf := make([]byte, _READ_BUF)
-	chancnt := make([]string, 0)
+	outcnt := make([]string, 0)
+	incnt := make([]string, 0)
 	qcall := ""
 	for {
 		rc, err := r.Read(buf)
@@ -108,12 +111,23 @@ func amiActionResponse(mm map[string]string, action string) {
 				m[string(k)] = string(v)
 			}
 			if action == _ACSC {
-				if xx, yy := regexp.MatchString(``+CHREX1+`\S*|`+CHREX2+`\S*`, m["Channel"]); xx {
-					if xx == true {
-						chancnt = append(chancnt, m["Channel"])
-					}
-					if yy != nil {
+				if arg == "out" {
+					if xx, yy := regexp.MatchString(`` + CHREX1 + `\S*|` + CHREX2 + `\S*`, m["Channel"]); xx {
+						if xx == true {
+							outcnt = append(outcnt, m["Channel"])
+						}
+						if yy != nil {
 
+						}
+					}
+				} else if arg == "in" {
+					if xx, yy := regexp.MatchString(`` + CHREX3 + `\S*`, m["Channel"]); xx {
+						if xx == true {
+							incnt = append(incnt, m["Channel"])
+						}
+						if yy != nil {
+
+						}
 					}
 				}
 			} else if action == _AQS {
@@ -124,8 +138,10 @@ func amiActionResponse(mm map[string]string, action string) {
 
 		}
 	}
-	if action == _ACSC {
-		fmt.Println(len(chancnt))
+	if action == _ACSC && arg == "out" {
+		fmt.Println(len(outcnt))
+	} else if action == _ACSC && arg == "in" {
+		fmt.Println(len(incnt))
 	} else if action == _AQS {
 		fmt.Println(qcall)
 	}
@@ -158,7 +174,9 @@ func main() {
 		arg1 := os.Args[1]
 		switch arg1 {
 		case "channels_out" :
-			CoreShowChannels()
+			CoreShowChannels("out")
+		case "channels_in" :
+			CoreShowChannels("in")
 		default:
 
 		}
@@ -172,17 +190,18 @@ func main() {
 	}
 }
 
-func CoreShowChannels() {
+func CoreShowChannels(s string) {
 	var csc = make(map[string]string)
 	csc["Action"] = _ACSC
-	amiActionResponse(csc, _ACSC)
+	amiActionResponse(csc, _ACSC, s)
 }
 
 func QueueStatus(q string) {
 	var qs = make(map[string]string)
 	qs["Action"] = _AQS
 	qs["Queue"] = q
-	amiActionResponse(qs, _AQS)
+	s := ""
+	amiActionResponse(qs, _AQS, s)
 }
 
 func LoggerMap(s map[string]string) {
