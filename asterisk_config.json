@@ -1,0 +1,12 @@
+{
+    "ami" : {
+        "RemotePort" : "5038",
+        "RemoteHost" : "asterisk",
+        "Username" : "asterisk",
+        "Password" : "password"
+    },
+    "zabbixCheck" : {
+        "ChanRex1" : "Chan1",
+        "ChanRex2" : "Chan2"
+    },
+}    
