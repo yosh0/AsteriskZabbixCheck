@@ -110,7 +110,6 @@ func amiActionResponse(mm map[string]string, action string, arg string) {
 				m[string(k)] = string(v)
 			}
 			if action == _ACSC {
-				fmt.Println(m)
 				if arg == "out" {
 					if xx, yy := regexp.MatchString(`` + CHREX1 + `\S*|` + CHREX2 + `\S*`, m["Channel"]); xx {
 						if xx == true {
