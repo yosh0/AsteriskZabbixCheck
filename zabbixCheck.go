@@ -18,7 +18,7 @@ const (
 	_KVT 		= ":"              	// header value separator
 	_READ_BUF     	= 512              	// buffer size for socket reader
 	_CMD_END      	= "--END COMMAND--"	// Asterisk command data end
-	_ACSC		= "CoreShowChannel"	// Const Action
+	_ACSC		= "CoreShowChannels"	// Const Action
 	_AQS		= "QueueStatus"		// Const Action
 )
 
@@ -33,12 +33,12 @@ var (
 )
 
 type Config struct  {
-	Ami Ami
+	ZabbixAmi ZabbixAmi
 	LogDir LogDir
 	ZabbixCheck ZabbixCheck
 }
 
-type Ami struct {
+type ZabbixAmi struct {
 	RemotePort string
 	RemoteHost string
 	Username   string
@@ -110,6 +110,7 @@ func amiActionResponse(mm map[string]string, action string, arg string) {
 				m[string(k)] = string(v)
 			}
 			if action == _ACSC {
+				fmt.Println(m)
 				if arg == "out" {
 					if xx, yy := regexp.MatchString(`` + CHREX1 + `\S*|` + CHREX2 + `\S*`, m["Channel"]); xx {
 						if xx == true {
@@ -157,10 +158,10 @@ func init() {
 	if err != nil {
 		fmt.Println("Error: ", err)
 	}
-	AMIhost = conf.Ami.RemoteHost
-	AMIport = conf.Ami.RemotePort
-	AMIuser = conf.Ami.Username
-	AMIpass = conf.Ami.Password
+	AMIhost = conf.ZabbixAmi.RemoteHost
+	AMIport = conf.ZabbixAmi.RemotePort
+	AMIuser = conf.ZabbixAmi.Username
+	AMIpass = conf.ZabbixAmi.Password
 	LOGDIR = conf.LogDir.Path
 	CHREX1 = conf.ZabbixCheck.ChanRex1
 	CHREX2 = conf.ZabbixCheck.ChanRex2
