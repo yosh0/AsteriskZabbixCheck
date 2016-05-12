@@ -9,17 +9,20 @@ import (
 	"bytes"
 	"bufio"
 	"regexp"
+	"crypto/aes"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
+	"crypto/cipher"
 )
 
 const (
-	_LT		= "\r\n"            	// packet line separator
-	_LS		= "\x0D\x0A"	    	// Line serarators
-	_KVT 		= ":"              	// header value separator
-	_READ_BUF     	= 512              	// buffer size for socket reader
-	_CMD_END      	= "--END COMMAND--"	// Asterisk command data end
-	_ACSC		= "CoreShowChannels"	// Const Action
-	_AQS		= "QueueStatus"		// Const Action
+	_LT		= "\x0D\x0A"
+	_KVT 		= ":"
+	_READ_BUF     	= 512
+	_CMD_END      	= "--END COMMAND--"
+	_ACSC		= "CoreShowChannels"
+	_AQS		= "QueueStatus"
 )
 
 var (
@@ -146,17 +149,50 @@ func amiActionResponse(mm map[string]string, action string, arg string) {
 	}
 }
 
-func init() {
-	file, e1 := os.Open("/etc/asterisk/asterisk_config.json")
-	if e1 != nil {
-		fmt.Println("Error: ", e1)
-	}
-	decoder := json.NewDecoder(file)
-	conf := Config{}
-	err := decoder.Decode(&conf)
+func decrypt(cipherstring string, keystring string) []byte {
+	ciphertext := []byte(cipherstring)
+	key := []byte(keystring)
+	block, err := aes.NewCipher(key)
 	if err != nil {
-		fmt.Println("Error: ", err)
+		panic(err)
 	}
+	if len(ciphertext) < aes.BlockSize {
+		panic("Text is too short")
+	}
+	iv := ciphertext[:aes.BlockSize]
+	ciphertext = ciphertext[aes.BlockSize:]
+	stream := cipher.NewCFBDecrypter(block, iv)
+	stream.XORKeyStream(ciphertext, ciphertext)
+	return ciphertext
+}
+
+func init() {
+	k := os.Getenv("ASTCONFIG")
+	f, err := os.Open(os.Getenv("ASTCONF"))
+
+	if err != nil {
+		LoggerString(err.Error())
+	}
+	data := make([]byte, 10000)
+	count, err := f.Read(data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	hasher := md5.New()
+    	hasher.Write([]byte(k))
+    	key := hex.EncodeToString(hasher.Sum(nil))
+
+	content := string(data[:count])
+	df := decrypt(content, key)
+	c := bytes.NewReader(df)
+	decoder := json.NewDecoder(c)
+	conf := Config{}
+	err = decoder.Decode(&conf)
+	if err != nil {
+		LoggerString(err.Error())
+	}
+
 	AMIhost = conf.ZabbixAmi.RemoteHost
 	AMIport = conf.ZabbixAmi.RemotePort
 	AMIuser = conf.ZabbixAmi.Username
@@ -165,8 +201,6 @@ func init() {
 	CHREX1 = conf.ZabbixCheck.ChanRex1
 	CHREX2 = conf.ZabbixCheck.ChanRex2
 	CHREX3 = conf.ZabbixCheck.ChanRex3
-	stdlog = log.New(os.Stdout, "", log.Ldate|log.Ltime)
-	errlog = log.New(os.Stderr, "", log.Ldate|log.Ltime)
 }
 
 func main() {
