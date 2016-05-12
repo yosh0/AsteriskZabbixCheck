@@ -61,7 +61,11 @@ type ZabbixCheck struct {
 type Message map[string]string
 
 func amiActionResponse(mm map[string]string, action string, arg string) {
-	conn, _ := net.Dial("tcp", AMIhost+":"+AMIport)
+	conn, err := net.Dial("tcp", AMIhost+":"+AMIport)
+	if err != nil {
+		fmt.Println("0")
+		os.Exit(88)
+	}
 	fmt.Fprintf(conn, "Action: Login"+_LT)
 	fmt.Fprintf(conn, "Username: "+AMIuser+_LT)
 	fmt.Fprintf(conn, "Secret: "+AMIpass+_LT+_LT)
