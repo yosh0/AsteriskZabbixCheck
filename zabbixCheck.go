@@ -177,7 +177,7 @@ func init() {
 	if err != nil {
 		LoggerString(err.Error())
 	}
-	data := make([]byte, 10000)
+	data := make([]byte, 20000)
 	count, err := f.Read(data)
 	if err != nil {
 		log.Fatal(err)
